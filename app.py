@@ -12,12 +12,20 @@ import midtransclient
 # SETUP DATABASE & APP 
 app = Flask(__name__)
 
-# KONFIGURASI DATABASE 
-NAMA_FILE_DB = 'yenggeeeee_homeservice.db' 
+# --- KONFIGURASI DATABASE AZURE 
+DB_USER = "salvado"
+DB_PASSWORD = "Salvado.Agusss1608"  
+DB_HOST = "homeservice.mysql.database.azure.com"
+DB_NAME = "homeservice_db" 
 
-# Menggunakan path absolute agar Azure bisa menemukannya dengan tepat
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, NAMA_FILE_DB)
+# Perintah connect ke MySQL Azure tanpa sertifikat
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
+
+# Agar koneksi tidak putus-nyambung
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 280,
+}
 
 # KONFIGURASI KEAMANAN 
 app.config['SECRET_KEY'] = 'yengge_project_kuliah_secret_key_12345'
@@ -280,3 +288,4 @@ if __name__ == '__main__':
             
 
     socketio.run(app, debug=True)
+
