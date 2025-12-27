@@ -16,7 +16,7 @@ app = Flask(__name__)
 DB_USER = "salvado"
 DB_PASSWORD = "Salvado.Agusss1608"  
 DB_HOST = "homeservice.mysql.database.azure.com"
-DB_NAME = "homeservice_db" 
+DB_NAME = "yenggeeeee_homeservice" 
 
 # Perintah connect ke MySQL Azure tanpa sertifikat
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
@@ -288,4 +288,5 @@ if __name__ == '__main__':
             
 
     socketio.run(app, debug=True)
+
 
