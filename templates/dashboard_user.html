@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-5xl mx-auto mb-20 animate-fade-in-up px-4">
+    <div class="bg-teal-600 rounded-[2.5rem] p-10 mb-10 text-white shadow-2xl relative overflow-hidden">
+        <div class="relative z-10">
+            <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block">Member Area</span>
+            <h1 class="text-4xl font-extrabold mb-2">Halo, {{ current_user.name.split()[0] }}!</h1>
+            <p class="text-teal-50 text-lg">Pantau pesanan Anda di sini.</p>
+        </div>
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl -mt-10 -mr-10 pointer-events-none"></div>
+    </div>
+
+    <h2 class="text-2xl font-bold mb-6 text-slate-800">Riwayat Pesanan</h2>
+    
+    <div class="space-y-6">
+        {% for booking in bookings %}
+        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition flex flex-col md:flex-row items-center gap-6 group">
+            <img src="{{ booking.service.image }}" class="w-32 h-24 rounded-2xl object-cover bg-slate-100 shadow-sm">
+            <div class="flex-grow text-center md:text-left">
+                <div class="text-xs font-mono text-slate-400 mb-1">#{{ booking.invoice_number }}</div>
+                <h3 class="text-xl font-bold text-slate-900">{{ booking.service.title }}</h3>
+                <p class="text-slate-500 font-medium">Rp {{ "{:,.0f}".format(booking.service.price) }}</p>
+            </div>
+            <div>
+                {% if booking.status == 'UNPAID' %}
+                    <a href="/invoice/{{ booking.id }}" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition shadow-lg text-sm">Bayar</a>
+                {% else %}
+                    <span class="bg-green-100 text-green-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+                        ✓ LUNAS
+                    </span>
+                    <a href="/invoice/{{ booking.id }}" class="block text-center text-xs text-slate-400 mt-2 hover:text-teal-600 underline">Nota</a>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-3 py-20 text-center bg-white rounded-[2.5rem] border border-slate-100 border-dashed">
+            <div class="mb-6">
+                <svg class="w-32 h-32 mx-auto text-slate-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 11H5M19 11C20.1046 11 21 11.8954 21 13V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V13C3 11.8954 3.89543 11 5 11M19 11V9C19 7.89543 18.1046 7 17 7M5 11V9C5 7.89543 5.89543 7 7 7M7 7V5C7 3.89543 7.89543 3 9 3H15C16.1046 3 17 3.89543 17 5V7M7 7H17"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-700">Belum ada pesanan aktif</h3>
+            <p class="text-slate-400 text-sm mb-6 max-w-xs mx-auto">Rumah bersih menanti Anda. Yuk, mulai pesan layanan pertama Anda sekarang!</p>
+            <a href="/" class="bg-teal-600 text-white px-8 py-3 rounded-full font-bold hover:bg-teal-700 transition shadow-lg shadow-teal-500/30">Cari Layanan</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

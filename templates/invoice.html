@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ client_key }}"></script>
+
+<div class="max-w-6xl mx-auto py-10 px-4 animate-fade-in-up">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-6">
+        {% for category, message in messages %}
+          <div class="p-4 rounded-2xl flex items-center gap-3 shadow-sm {{ 'bg-green-100 text-green-800' if category == 'success' else 'bg-red-100 text-red-800' }}">
+              <span class="font-bold">{{ message }}</span>
+          </div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 relative h-fit">
+            
+            <div class="absolute top-8 right-8 pointer-events-none">
+                {% if booking.status == 'PAID' or booking.status == 'Lunas' %}
+                    <div class="border-4 border-green-500 text-green-600 font-extrabold px-6 py-2 rounded-xl -rotate-12 text-xl uppercase">LUNAS</div>
+                {% else %}
+                    <div class="bg-orange-100 text-orange-600 px-4 py-2 rounded-lg font-bold text-xs uppercase">Belum Bayar</div>
+                {% endif %}
+            </div>
+
+            <h1 class="text-3xl font-extrabold text-slate-900 mb-2">INVOICE</h1>
+            <p class="text-slate-400 text-sm font-mono mb-8">#{{ booking.invoice_number }}</p>
+
+            <div class="space-y-6 border-b border-slate-100 pb-6 mb-6">
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase">Layanan</p>
+                    <p class="font-bold text-lg text-slate-900">{{ booking.service.title }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase">Total Biaya</p>
+                    <p class="font-extrabold text-2xl text-teal-600">Rp {{ "{:,.0f}".format(booking.service.price) }}</p>
+                </div>
+            </div>
+
+            <div>
+                {% if booking.status != 'PAID' and booking.status != 'Lunas' %}
+                    {% if current_user.role == 'user' %}
+                        <button id="pay-button" type="button" class="block w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-center hover:bg-slate-800 transition shadow-lg cursor-pointer">
+                            Bayar Sekarang (Midtrans)
+                        </button>
+                        <p class="text-center text-xs text-slate-400 mt-3">Klik tombol, popup akan muncul.</p>
+                    {% else %}
+                        <div class="w-full bg-slate-100 text-slate-500 py-4 rounded-2xl font-bold text-center">Menunggu Pembayaran User</div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center text-green-600 font-bold bg-green-50 p-4 rounded-xl">✓ Pembayaran Berhasil</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden h-[600px] flex flex-col">
+            <div class="bg-slate-900 p-6"><h3 class="font-bold text-white">Chat Room (Admin Support)</h3></div>
+            
+            <div id="messages" class="flex-grow overflow-y-auto p-6 bg-slate-50 flex flex-col gap-3">
+                {% for msg in chat_history %}
+                    <div class="p-3 rounded-lg text-sm max-w-[80%] {{ 'self-end bg-teal-600 text-white rounded-tr-none' if msg.sender_name == current_user.name else 'self-start bg-white border border-slate-200 rounded-tl-none' }}">
+                        <b class="block text-xs mb-1 opacity-70">{{ msg.sender_name }}</b>
+                        {{ msg.message }}
+                    </div>
+                {% endfor %}
+            </div>
+            
+             <div class="p-4 bg-white border-t flex gap-2">
+                <input type="text" id="msgInput" class="flex-1 bg-slate-100 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Ketik pesan..." onkeypress="handleEnter(event)">
+                <button onclick="kirimPesan()" class="bg-slate-900 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-700 transition">→</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===========================
+    // 1. LOGIKA PEMBAYARAN MIDTRANS
+    // ===========================
+    const payButton = document.getElementById('pay-button');
+    if (payButton) {
+        payButton.addEventListener('click', async function () {
+            const originalText = payButton.textContent;
+            payButton.textContent = "Sedang Memproses Token...";
+            payButton.disabled = true;
+
+            try {
+                const response = await fetch('/get_payment_token/{{ booking.id }}');
+                if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert("Gagal: " + data.error);
+                    payButton.textContent = originalText;
+                    payButton.disabled = false;
+                    return;
+                }
+
+                window.snap.pay(data.token, {
+                    onSuccess: function(result){
+                        window.location.href = "/payment_success/{{ booking.id }}";
+                    },
+                    onPending: function(result){
+                        alert("Menunggu pembayaran...");
+                        location.reload();
+                    },
+                    onError: function(result){
+                        alert("Pembayaran gagal!");
+                        location.reload();
+                    },
+                    onClose: function(){
+                        payButton.textContent = originalText;
+                        payButton.disabled = false;
+                    }
+                });
+
+            } catch (err) {
+                console.error(err);
+                alert("Terjadi kesalahan: " + err.message);
+                payButton.textContent = originalText;
+                payButton.disabled = false;
+            }
+        });
+    }
+
+    // ===========================
+    // 2. LOGIKA LIVE CHAT (SOCKET.IO)
+    // ===========================
+    // Pastikan socket.io.js sudah di-load di bagian atas
+    
+    // Inisialisasi koneksi
+    const socket = io(); 
+
+    // Gabung ke Room spesifik berdasarkan Booking ID
+    socket.emit('join', { booking_id: "{{ booking.id }}" });
+
+    // Fungsi Kirim Pesan
+    function kirimPesan() {
+        const input = document.getElementById('msgInput');
+        const message = input.value.trim();
+        
+        if(message) {
+            socket.emit('kirim_pesan_private', { 
+                msg: message, 
+                booking_id: "{{ booking.id }}" 
+            });
+            input.value = '';
+        }
+    }
+
+    // Fitur kirim pakai tombol Enter
+    function handleEnter(e) {
+        if (e.key === 'Enter') {
+            kirimPesan();
+        }
+    }
+
+    // Menerima Pesan dari Server (Realtime)
+    socket.on('terima_pesan', (data) => {
+        const box = document.getElementById('messages');
+        const currentUser = "{{ current_user.name }}";
+        
+        const div = document.createElement('div');
+        
+        // Styling bubble chat agar beda antara Pengirim dan Penerima
+        const isMe = data.sender === currentUser;
+        
+        div.className = `p-3 rounded-lg text-sm max-w-[80%] mb-2 ${
+            isMe 
+            ? "self-end bg-teal-600 text-white rounded-tr-none" 
+            : "self-start bg-white border border-slate-200 rounded-tl-none"
+        }`;
+        
+        div.innerHTML = `
+            <b class="block text-xs mb-1 opacity-70">${data.sender}</b>
+            ${data.msg}
+        `;
+        
+        box.appendChild(div);
+        
+        // Auto scroll ke bawah
+        box.scrollTop = box.scrollHeight;
+    });
+
+    // Auto scroll ke pesan terakhir saat halaman dibuka
+    window.onload = function() {
+        const box = document.getElementById('messages');
+        if(box) box.scrollTop = box.scrollHeight;
+    };
+</script>
+{% endblock %}

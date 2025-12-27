@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto mb-20">
+    <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800">Dashboard {{ 'Admin' if is_admin else 'Pelanggan' }}</h1>
+            <p class="text-slate-500 mt-1">Kelola aktivitas dan pesanan Anda di sini.</p>
+        </div>
+        {% if is_admin %}
+        <span class="bg-teal-100 text-teal-800 text-xs font-bold px-3 py-1 rounded-full">Mode Administrator</span>
+        {% endif %}
+    </div>
+
+    {% if is_admin %}
+    <div class="bg-slate-900 text-white p-8 rounded-3xl mb-10 shadow-2xl shadow-slate-900/30 relative overflow-hidden group">
+        <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-teal-500 rounded-full opacity-20 blur-3xl transition duration-700 group-hover:bg-teal-400 group-hover:opacity-30"></div>
+        <h2 class="text-xl font-bold mb-6 relative z-10">Tambah Layanan Baru</h2>
+        
+        <form action="/admin/add_service" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+            <input type="text" name="title" placeholder="Nama Layanan" class="bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:bg-white/20" required>
+            <input type="number" name="price" placeholder="Harga (Rp)" class="bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:bg-white/20" required>
+            <input type="text" name="image" placeholder="URL Gambar" class="md:col-span-2 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:bg-white/20">
+            <textarea name="description" placeholder="Deskripsi Singkat" rows="3" class="md:col-span-2 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:bg-white/20 resize-none" required></textarea>
+            <button type="submit" class="md:col-span-2 bg-teal-500 text-white py-3 rounded-xl font-bold hover:bg-teal-400 transition shadow-lg">Simpan Layanan</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h3 class="font-bold text-slate-700 text-lg">Riwayat Pesanan</h3>
+            <span class="text-sm text-slate-400">{{ bookings|length }} Transaksi</span>
+        </div>
+        
+        {% if bookings %}
+            <div class="divide-y divide-slate-100">
+            {% for booking in bookings %}
+            <div class="p-6 hover:bg-slate-50 transition flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="flex items-center gap-5">
+                    <div class="w-20 h-20 bg-slate-200 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm">
+                        <img src="{{ booking.service.image or 'https://via.placeholder.com/150' }}" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg text-slate-800">{{ booking.service.title }}</h4>
+                        <p class="text-sm text-slate-500">Oleh: {{ booking.user.username }} • {{ booking.date_created.strftime('%d %b %Y') }}</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col md:items-end gap-2">
+                    <span class="px-4 py-1.5 rounded-full text-sm font-bold inline-flex items-center gap-2 {{ 'bg-green-100 text-green-700' if 'Lunas' in booking.status else 'bg-amber-100 text-amber-700' }}">
+                        {{ booking.status }}
+                    </span>
+                    {% if not is_admin and 'Lunas' not in booking.status %}
+                        <a href="/pay/{{ booking.id }}" class="inline-block bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-slate-800 transition">Bayar Sekarang</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div class="p-16 text-center text-slate-500">Belum ada data pesanan.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
