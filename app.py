@@ -24,8 +24,8 @@ app.config['SECRET_KEY'] = 'yengge_project_kuliah_secret_key_12345'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # SETUP MIDTRANS 
-MIDTRANS_SERVER_KEY = "SB-Mid-server-XXXXXXXXXXXXXXXXX"  
-MIDTRANS_CLIENT_KEY = "SB-Mid-client-XXXXXXXXXXXXXXXXX"  
+MIDTRANS_SERVER_KEY = "Mid-server-9NyMBFybZuxA9yqssL8Vz2gN"  
+MIDTRANS_CLIENT_KEY = "Mid-client-JOSeyl8ssNZ0G6YG"  
 
 snap = midtransclient.Snap(
     is_production=False, 
@@ -278,4 +278,5 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
             
+
     socketio.run(app, debug=True)
