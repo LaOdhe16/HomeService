@@ -248,5 +248,8 @@ This project is licensed under the **MIT License**.
 ---
 
 <p align="center">
-Made with ❤️ by <a href="https://github.com/LaOdhe16">LaOdhe16</a> and Contributors.
+Made with ❤️ by
+<a href="https://github.com/LaOdhe16">Salvado</a>
+and
+<a href="https://github.com/marckdekeyn-source">Marck</a>.
 </p>
