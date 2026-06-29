@@ -158,7 +158,6 @@ http://127.0.0.1:5000
 - 📋 Service Detail
 - 🧾 Invoice
 
-> *Screenshots can be added here for better documentation.*
 
 ---
 
